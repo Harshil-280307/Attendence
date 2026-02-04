@@ -15,7 +15,6 @@ const Storage = {
 
   addTeamMember(member) {
     const members = this.getTeamMembers();
-    member.id = this.generateId();
     members.push(member);
     this.saveTeamMembers(members);
     return member;
