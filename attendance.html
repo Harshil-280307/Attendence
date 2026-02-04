@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mark Attendance - Attendance System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="index.html" class="logo">AttendanceHub</a>
+      <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="team.html">Team</a>
+        <a href="attendance.html" class="active">Attendance</a>
+        <a href="reports.html">Reports</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>Mark Attendance</h1>
+    <p class="text-muted mb-2">Clock in and out, and submit daily work reports</p>
+
+    <div id="alertMessage" style="display: none;"></div>
+
+    <!-- Member Selection (First Time) -->
+    <div id="memberSelection" class="card">
+      <h2>Who are you?</h2>
+      <p class="text-muted mb-2">Select your name to continue. This device will remember you.</p>
+      
+      <div class="form-group">
+        <label for="memberSelect">Your Name *</label>
+        <select id="memberSelect">
+          <option value="">Loading...</option>
+        </select>
+      </div>
+
+      <button id="confirmMemberBtn" class="btn btn-primary">
+        Continue
+      </button>
+      
+      <div class="alert alert-warning mt-2">
+        <strong>Note:</strong> This is a self-service system. Each team member should access this page on their own device to mark their attendance.
+      </div>
+    </div>
+
+    <!-- Attendance Actions (After Selection) -->
+    <div id="attendanceActions" style="display: none;">
+      <div class="card">
+        <div class="d-flex justify-between align-center mb-2" style="flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 class="mb-0">Welcome, <span id="currentUserName"></span>!</h2>
+            <p class="text-muted mb-0"><span id="currentUserRole"></span></p>
+          </div>
+          <button id="changeMemberBtn" class="btn btn-secondary" style="height: fit-content;">
+            Switch User
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label for="currentDate">Date</label>
+          <input type="date" id="currentDate" readonly>
+        </div>
+
+        <div id="attendanceStatus"></div>
+
+        <div class="btn-group">
+          <button id="timeInBtn" class="btn btn-success" disabled>
+            ⏰ Time In
+          </button>
+          <button id="timeOutBtn" class="btn btn-danger" disabled>
+            🏁 Time Out
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Daily Work Report</h2>
+        <p class="text-muted mb-1">Describe what you accomplished today</p>
+        
+        <div class="form-group">
+          <label for="reportText">Work Report *</label>
+          <textarea 
+            id="reportText" 
+            placeholder="Enter your daily work report here... (Required before Time Out)"
+            disabled
+            rows="6"
+          ></textarea>
+        </div>
+        
+        <p class="text-muted" style="font-size: 0.875rem;">
+          <strong>Note:</strong> You must fill in your work report before you can clock out.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/attendance.js"></script>
+</body>
+</html>

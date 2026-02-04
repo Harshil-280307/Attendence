@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Attendance System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="index.html" class="logo">AttendanceHub</a>
+      <nav>
+        <a href="index.html" class="active">Dashboard</a>
+        <a href="team.html">Team</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="reports.html">Reports</a>
+        <a href="view.html">view</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>Dashboard</h1>
+    <p class="text-muted mb-2" id="currentDate">Loading...</p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Team Members</div>
+        <div class="stat-value" id="totalMembers">0</div>
+      </div>
+      
+      <div class="stat-card" style="border-left-color: var(--success)">
+        <div class="stat-label">Present Today</div>
+        <div class="stat-value" style="color: var(--success)" id="presentToday">0</div>
+      </div>
+      
+      <div class="stat-card" style="border-left-color: var(--danger)">
+        <div class="stat-label">Absent Today</div>
+        <div class="stat-value" style="color: var(--danger)" id="absentToday">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="mb-2">Quick Actions</h2>
+      
+      <div class="alert" style="background: #dbeafe; border-left: 4px solid var(--primary); margin-bottom: 1.5rem;">
+        <strong>👋 Team Members:</strong> Go to <a href="attendance.html" style="color: var(--primary); font-weight: 600;">Mark Attendance</a> to clock in/out<br>
+        <strong>👔 Admin/Manager:</strong> Use the buttons below to manage the team
+      </div>
+      
+      <div class="btn-group">
+        <a href="team.html" class="btn btn-primary">
+          Manage Team
+        </a>
+        <a href="attendance.html" class="btn btn-success">
+          Mark Attendance
+        </a>
+        <a href="reports.html" class="btn btn-secondary">
+          View Reports
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="mb-1">About This System</h2>
+      <p class="text-muted mb-1">
+        This is a lightweight attendance and team management system designed for small teams. 
+        Track daily attendance, manage work shifts, and generate comprehensive reports.
+      </p>
+      <p class="text-muted mb-0">
+        <strong>Getting Started:</strong>
+      </p>
+      <ol class="text-muted" style="margin-left: 1.5rem; margin-top: 0.5rem;">
+        <li>Add your team members in the Team section</li>
+        <li>Set their shift timings and roles</li>
+        <li>Mark daily attendance with work reports</li>
+        <li>View daily and monthly reports for insights</li>
+      </ol>
+    </div>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
