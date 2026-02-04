@@ -41,30 +41,35 @@ const Storage = {
     localStorage.setItem(this.KEYS.ATTENDANCE, JSON.stringify(records));
   },
 
-  getAttendanceByDate(date) {
-    const records = this.getAttendanceRecords();
-    return records.filter(r => r.date === date);
-  },
+getAttendanceByDate(date) {
+  const records = this.getAttendanceRecords();
+  return records.filter(a => a.date === date && a.timeIn);
+}
+,
+
 
   getAttendanceByUserAndDate(userId, date) {
     const records = this.getAttendanceRecords();
     return records.find(r => r.userId === userId && r.date === date);
   },
 
-  saveAttendance(attendance) {
-    const records = this.getAttendanceRecords();
-    const existingIndex = records.findIndex(
-      r => r.userId === attendance.userId && r.date === attendance.date
-    );
+saveAttendance(att) {
+  const all = this.getAttendanceRecords();
+  
+  const index = all.findIndex(a =>
+    a.userId === att.userId && a.date === att.date
+  );
 
-    if (existingIndex >= 0) {
-      records[existingIndex] = attendance;
-    } else {
-      records.push(attendance);
-    }
+  if (index > -1) {
+    all[index] = att;
+  } else {
+    all.push(att);
+  }
 
-    this.saveAttendanceRecords(records);
-  },
+  this.saveAttendanceRecords(all);
+}
+
+,
 
   getAttendanceByMonth(year, month) {
     const records = this.getAttendanceRecords();
