@@ -154,19 +154,23 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // -------- TIME IN --------
-  timeInBtn.addEventListener('click', function () {
-    currentAttendance = {
-      userId: selectedMember.id,
-      date: currentDateInput.value,
-      timeIn: Storage.getCurrentTime(),
-      timeOut: null,
-      report: ''
-    };
+timeInBtn.addEventListener('click', function () {
+  const date = currentDateInput.value;
+  const timeIn = Storage.getCurrentTime();
 
-    Storage.saveAttendance(currentAttendance);
-    showAlert('Time In recorded successfully!', 'success');
-    updateUI();
-  });
+  currentAttendance = {
+    userId: selectedMember.id,
+    date: date,
+    timeIn: timeIn,
+    timeOut: null,
+    report: ''
+  };
+
+  Storage.saveAttendance(currentAttendance);
+  showAlert('Time In recorded successfully!', 'success');
+  updateUI();
+});
+
 
   // -------- TIME OUT --------
   timeOutBtn.addEventListener('click', function () {
