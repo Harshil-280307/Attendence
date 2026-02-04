@@ -1,4 +1,7 @@
-document.addEventListener('DOMContentLoaded', function() {
+// Holds team members loaded from team.json
+let teamMembers = [];
+
+document.addEventListener('DOMContentLoaded', function () {
   const memberSelect = document.getElementById('memberSelect');
   const currentDateInput = document.getElementById('currentDate');
   const timeInBtn = document.getElementById('timeInBtn');
@@ -9,17 +12,19 @@ document.addEventListener('DOMContentLoaded', function() {
   const changeMemberBtn = document.getElementById('changeMemberBtn');
   const memberSelectionDiv = document.getElementById('memberSelection');
   const attendanceActionsDiv = document.getElementById('attendanceActions');
+  const alertDiv = document.getElementById('alertMessage');
 
   let currentAttendance = null;
   let selectedMember = null;
   let currentUserId = localStorage.getItem('currentUserId');
 
-  function init() {
+  // -------- INIT --------
+  async function init() {
     currentDateInput.value = Storage.getCurrentDate();
-    loadTeamMembers();
-    
+    await loadTeamMembers();
+
     if (currentUserId) {
-      selectedMember = Storage.getTeamMember(currentUserId);
+      selectedMember = teamMembers.find(m => m.id === currentUserId);
       if (selectedMember) {
         loadUserAttendance();
       } else {
@@ -31,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // -------- UI TOGGLES --------
   function showMemberSelection() {
     memberSelectionDiv.style.display = 'block';
     attendanceActionsDiv.style.display = 'none';
@@ -43,44 +49,57 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('currentUserRole').textContent = selectedMember.role;
   }
 
-  function loadTeamMembers() {
-    const members = Storage.getTeamMembers();
-    
-    if (members.length === 0) {
-      memberSelect.innerHTML = '<option value="">No team members available</option>';
-      confirmMemberBtn.disabled = true;
-      return;
-    }
+  // -------- LOAD TEAM FROM JSON --------
+  async function loadTeamMembers() {
+    try {
+      const response = await fetch('team.json');
+      teamMembers = await response.json();
 
-    memberSelect.innerHTML = '<option value="">-- Select Your Name --</option>' +
-      members.map(m => `<option value="${m.id}">${escapeHtml(m.name)} (${escapeHtml(m.role)})</option>`).join('');
-    
-    if (currentUserId) {
-      memberSelect.value = currentUserId;
+      if (!teamMembers.length) {
+        memberSelect.innerHTML = '<option value="">No team members available</option>';
+        confirmMemberBtn.disabled = true;
+        return;
+      }
+
+      memberSelect.innerHTML =
+        '<option value="">-- Select Your Name --</option>' +
+        teamMembers.map(m =>
+          `<option value="${m.id}">
+            ${escapeHtml(m.name)} (${escapeHtml(m.role)})
+          </option>`
+        ).join('');
+
+      if (currentUserId) {
+        memberSelect.value = currentUserId;
+      }
+
+    } catch (error) {
+      console.error(error);
+      memberSelect.innerHTML = '<option value="">Failed to load team</option>';
+      confirmMemberBtn.disabled = true;
     }
   }
 
-  confirmMemberBtn.addEventListener('click', function() {
+  // -------- CONFIRM MEMBER --------
+  confirmMemberBtn.addEventListener('click', function () {
     const memberId = memberSelect.value;
-    
+
     if (!memberId) {
-      showAlert('Please select your name from the list', 'danger');
+      showAlert('Please select your name', 'danger');
       return;
     }
 
     currentUserId = memberId;
     localStorage.setItem('currentUserId', memberId);
-    selectedMember = Storage.getTeamMember(memberId);
-    
+    selectedMember = teamMembers.find(m => m.id === memberId);
     loadUserAttendance();
   });
 
-  changeMemberBtn.addEventListener('click', function() {
-    if (confirm('Are you sure you want to switch to a different user? This will change who is logged in on this device.')) {
-      showMemberSelection();
-    }
+  changeMemberBtn.addEventListener('click', function () {
+    showMemberSelection();
   });
 
+  // -------- LOAD ATTENDANCE --------
   function loadUserAttendance() {
     showAttendanceActions();
     const date = currentDateInput.value;
@@ -88,73 +107,58 @@ document.addEventListener('DOMContentLoaded', function() {
     updateUI();
   }
 
+  // -------- UPDATE UI --------
   function updateUI() {
     if (!currentAttendance) {
       timeInBtn.disabled = false;
       timeOutBtn.disabled = true;
       reportTextarea.disabled = true;
       reportTextarea.value = '';
-      
-      const shiftInfo = selectedMember ? 
-        `<div class="text-muted" style="margin-top: 0.5rem; font-size: 0.9rem;">
-          Your shift: ${selectedMember.shiftStart} - ${selectedMember.shiftEnd}
-        </div>` : '';
-      
+
       statusDiv.innerHTML = `
         <div class="alert alert-warning">
-          No attendance record for today. Click "Time In" to start your shift.
+          No attendance for today. Click "Time In" to start.
         </div>
-        ${shiftInfo}
+        <div class="text-muted">
+          Your shift: ${selectedMember.shiftStart} - ${selectedMember.shiftEnd}
+        </div>
       `;
-    } else if (currentAttendance.timeIn && !currentAttendance.timeOut) {
+    } 
+    else if (currentAttendance.timeIn && !currentAttendance.timeOut) {
       timeInBtn.disabled = true;
       timeOutBtn.disabled = false;
       reportTextarea.disabled = false;
       reportTextarea.value = currentAttendance.report || '';
-      
-      const isLate = Storage.compareTime(currentAttendance.timeIn, selectedMember.shiftStart) > 0;
-      const lateWarning = isLate ? 
-        `<div style="color: var(--warning); margin-top: 0.5rem;">⚠️ You clocked in late today</div>` : '';
-      
+
       statusDiv.innerHTML = `
         <div class="alert alert-success">
-          <strong>Time In:</strong> ${currentAttendance.timeIn} (Shift starts: ${selectedMember.shiftStart})${lateWarning}<br>
-          Please complete your daily work report before clocking out.
+          <strong>Time In:</strong> ${currentAttendance.timeIn}<br>
+          Please fill work report before Time Out.
         </div>
       `;
-    } else if (currentAttendance.timeOut) {
+    } 
+    else {
       timeInBtn.disabled = true;
       timeOutBtn.disabled = true;
       reportTextarea.disabled = true;
       reportTextarea.value = currentAttendance.report || '';
-      
-      const isOvertime = Storage.compareTime(currentAttendance.timeOut, selectedMember.shiftEnd) > 0;
-      const overtimeNote = isOvertime ? 
-        `<div style="color: var(--warning); margin-top: 0.5rem;">⏰ Overtime recorded</div>` : '';
-      
+
       statusDiv.innerHTML = `
         <div class="alert alert-success">
           <strong>Time In:</strong> ${currentAttendance.timeIn}<br>
-          <strong>Time Out:</strong> ${currentAttendance.timeOut} (Shift ends: ${selectedMember.shiftEnd})${overtimeNote}<br>
-          Attendance completed for today. See you tomorrow! 👋
+          <strong>Time Out:</strong> ${currentAttendance.timeOut}<br>
+          Attendance completed for today.
         </div>
       `;
     }
   }
 
-  timeInBtn.addEventListener('click', function() {
-    if (!selectedMember) {
-      showAlert('Please select a team member', 'danger');
-      return;
-    }
-
-    const date = currentDateInput.value;
-    const timeIn = Storage.getCurrentTime();
-
+  // -------- TIME IN --------
+  timeInBtn.addEventListener('click', function () {
     currentAttendance = {
       userId: selectedMember.id,
-      date: date,
-      timeIn: timeIn,
+      date: currentDateInput.value,
+      timeIn: Storage.getCurrentTime(),
       timeOut: null,
       report: ''
     };
@@ -164,23 +168,16 @@ document.addEventListener('DOMContentLoaded', function() {
     updateUI();
   });
 
-  timeOutBtn.addEventListener('click', function() {
-    if (!selectedMember || !currentAttendance) {
-      showAlert('Please clock in first', 'danger');
-      return;
-    }
-
+  // -------- TIME OUT --------
+  timeOutBtn.addEventListener('click', function () {
     const report = reportTextarea.value.trim();
-    
+
     if (!report) {
-      showAlert('Please fill in your daily work report before clocking out', 'danger');
-      reportTextarea.focus();
+      showAlert('Work report is required before Time Out', 'danger');
       return;
     }
 
-    const timeOut = Storage.getCurrentTime();
-    
-    currentAttendance.timeOut = timeOut;
+    currentAttendance.timeOut = Storage.getCurrentTime();
     currentAttendance.report = report;
 
     Storage.saveAttendance(currentAttendance);
@@ -188,17 +185,15 @@ document.addEventListener('DOMContentLoaded', function() {
     updateUI();
   });
 
+  // -------- ALERT --------
   function showAlert(message, type) {
-    const alertDiv = document.getElementById('alertMessage');
     alertDiv.className = `alert alert-${type}`;
     alertDiv.textContent = message;
     alertDiv.style.display = 'block';
-
-    setTimeout(() => {
-      alertDiv.style.display = 'none';
-    }, 3000);
+    setTimeout(() => alertDiv.style.display = 'none', 3000);
   }
 
+  // -------- SAFE TEXT --------
   function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
