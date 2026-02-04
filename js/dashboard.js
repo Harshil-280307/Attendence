@@ -1,24 +1,42 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function () {
   const totalMembersEl = document.getElementById('totalMembers');
   const presentTodayEl = document.getElementById('presentToday');
   const absentTodayEl = document.getElementById('absentToday');
   const currentDateEl = document.getElementById('currentDate');
 
-  function updateDashboard() {
-    const members = Storage.getTeamMembers();
+  async function updateDashboard() {
+    // Load team
+    const teamRes = await fetch('team.json');
+    const members = await teamRes.json();
+
+    // Get today
     const today = Storage.getCurrentDate();
-    const todayAttendance = Storage.getAttendanceByDate(today);
+    const attendance = Storage.getAttendanceRecords();
 
-    const presentCount = todayAttendance.filter(a => a.timeIn).length;
-    const absentCount = members.length - presentCount;
+    // Count present
+    const presentCount = attendance.filter(
+      a => a.date === today && a.timeIn
+    ).length;
 
+    // ⏰ Current time check
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // 3:00 PM = 15:00
+    const isAfterThreePM =
+      currentHour > 15 || (currentHour === 15 && currentMinute >= 0);
+
+    // Count absent only after 3 PM
+    const absentCount = isAfterThreePM
+      ? members.length - presentCount
+      : 0;
+
+    // Update UI
     totalMembersEl.textContent = members.length;
     presentTodayEl.textContent = presentCount;
     absentTodayEl.textContent = absentCount;
-
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const dateStr = new Date().toLocaleDateString('en-US', options);
-    currentDateEl.textContent = dateStr;
+    currentDateEl.textContent = now.toDateString();
   }
 
   updateDashboard();
